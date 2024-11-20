@@ -173,7 +173,7 @@ class LucasKanade:
 
        
 if __name__ == '__main__':
-    workspace = '/hdd3/opensource/iceberg_tracking/data/test/'
+    workspace = 'G:\Glacier\GD_ICEH_iceHabitat\data\test\'
     detect_interval = 3 #set between 2 and 4
     time_spacing = 120 #set between 60 and 240
     plt.ioff()
