@@ -150,6 +150,10 @@ class LucasKanade:
                     workspace = self.workspace + plotfolder                 
                     
                     plotname = '{}{}_{}sec.png'.format(workspace, photo_name, time_covered_plot)
+                    print(self.workspace)
+                    print(plotfolder)
+                    print(workspace)
+                    print(plotname)
                     
                     plt.savefig(plotname, format='png', dpi=100)
                     
@@ -169,11 +173,14 @@ class LucasKanade:
                 
             self.prev_gray = frame_gray
 
-            print('{} / {} done...'.format(counter, len(self.imagelist)))
+            print('{} / {} done...'.format(counter+1, len(self.imagelist))) #AKB added +1 to python 0-based count
 
        
 if __name__ == '__main__':
-    workspace = 'G:\Glacier\GD_ICEH_iceHabitat\data\test\'
+    # workspace = 'G:\Glacier\GD_ICEH_iceHabitat\data\test\'
+    workspace = 'G:/Glacier/GD_ICEH_iceHabitat/data/test/'
+    #workspace = 'G:\\Glacier\\GD_ICEH_iceHabitat\\data\\test\\'
+    #workspace = '/hdd3/opensource/iceberg_tracking/data/test/'
     detect_interval = 3 #set between 2 and 4
     time_spacing = 120 #set between 60 and 240
     plt.ioff()
