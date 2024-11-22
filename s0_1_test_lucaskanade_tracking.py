@@ -47,9 +47,7 @@ class LucasKanade:
         self.track_len = self.detect_interval
         self.tracks = []
         # self.imagelist = sorted(glob.glob(workspace + '/' +'*.jpg'))
-        #asdf=sorted(glob.glob(workspace + '/' +'*.jpg'))
         self.imagelist=sorted(workspace.glob('*.jpg'))
-        #qwer=sorted(workspace2.glob('*.jpg'))
         self.distthreshold = 1.0
         self.mask = 0
         # self.date = workspace.split('/')[-1]
@@ -161,18 +159,6 @@ class LucasKanade:
                     
                     # plotname = '{}{}_{}sec.png'.format(workspace, photo_name, time_covered_plot)
                     plotname=workspace/ f'{photo_name}_{time_covered_plot}sec.png'
-                    print(image)
-                    print(photo_name)
-                    print(self.workspace)
-                    print(plotfolder)
-                    print(workspace)
-                    print(plotname)
-                    # G:/Glacier/GD_ICEH_iceHabitat/data/test\20190724-130256.jpg
-                    # test\20190724-130256
-                    # G:/Glacier/GD_ICEH_iceHabitat/data/test
-                    # /plots_360/
-                    # G:/Glacier/GD_ICEH_iceHabitat/data/test/plots_360/
-                    # G:/Glacier/GD_ICEH_iceHabitat/data/test/plots_360/test\20190724-130256_360sec.png
 
                     plt.savefig(plotname, format='png', dpi=100)
                     
@@ -196,14 +182,10 @@ class LucasKanade:
 
        
 if __name__ == '__main__':
-    # workspace = 'G:\Glacier\GD_ICEH_iceHabitat\data\test\'
-    # workspace = 'G:/Glacier/GD_ICEH_iceHabitat/data/test/'
-
     # workspace = 'G:/Glacier/GD_ICEH_iceHabitat/data/test' #does better without trailing slash (I think)
     workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data/test') #Path would take care of trailing slash
-
-    #workspace = 'G:\\Glacier\\GD_ICEH_iceHabitat\\data\\test\\'
     #workspace = '/hdd3/opensource/iceberg_tracking/data/test/'
+    # workspace = Path('/hdd3/opensource/iceberg_tracking/data/test/')
     detect_interval = 3 #set between 2 and 4
     time_spacing = 120 #set between 60 and 240
     plt.ioff()
