@@ -46,24 +46,26 @@ class LucasKanade:
 
         self.track_len = self.detect_interval
         self.tracks = []
-        self.imagelist = sorted(glob.glob(workspace + '/' +'*.jpg'))
+        # self.imagelist = sorted(glob.glob(workspace + '/' +'*.jpg'))
         #asdf=sorted(glob.glob(workspace + '/' +'*.jpg'))
-        self.imagelist2=sorted(workspace2.glob('*.jpg'))
+        self.imagelist=sorted(workspace.glob('*.jpg'))
         #qwer=sorted(workspace2.glob('*.jpg'))
         self.distthreshold = 1.0
         self.mask = 0
-        self.date = workspace.split('/')[-1]
-        self.date2=workspace2.parts[-1]
+        # self.date = workspace.split('/')[-1]
+        self.date=workspace.parts[-1]
         self.workspace = workspace
                  
     def run(self):
         
         time_covered_plot = self.time_spacing * self.detect_interval
         
-        plotfolder = '/plots_{}/'.format(time_covered_plot)
+        # plotfolder = '/plots_{}/'.format(time_covered_plot)
+        plotfolder = f'plots_{time_covered_plot}'
         
         try:
-            os.mkdir(self.workspace + plotfolder)  
+            # os.mkdir(self.workspace + plotfolder)  
+            os.mkdir(self.workspace / plotfolder) #/ is overloaded by pathlib
         except:
             pass
 
@@ -147,15 +149,18 @@ class LucasKanade:
                     ax.set_yticklabels([])
                     fig.tight_layout()
                     
-                    photo_name = image.split('/')[-1].split('.')[0] 
+                    # photo_name = image.split('/')[-1].split('.')[0] 
+                    photo_name = image.parts[-1].split('.')[0]
      
-                    annotatefun(ax, ['Displacement over {} seconds, sampling every {} seconds'.format(time_covered_plot, self.time_spacing), photo_name], 
-					0.03, 0.95, fonts=22, col='white')
+                    annotatefun(ax, ['Displacement over {} seconds, sampling every {} seconds'.format(
+                      time_covered_plot, self.time_spacing), photo_name], 
+                      0.03, 0.95, fonts=22, col='white')
                     
-                    workspace = self.workspace + plotfolder                 
+                    # workspace = self.workspace + plotfolder
+                    workspace = self.workspace / plotfolder
                     
-                    plotname = '{}{}_{}sec.png'.format(workspace, photo_name, time_covered_plot)
-                    plotname2=workspace2/ f'{photo_name}_{time_covered_plot}sec.png'
+                    # plotname = '{}{}_{}sec.png'.format(workspace, photo_name, time_covered_plot)
+                    plotname=workspace/ f'{photo_name}_{time_covered_plot}sec.png'
                     print(image)
                     print(photo_name)
                     print(self.workspace)
@@ -193,8 +198,10 @@ class LucasKanade:
 if __name__ == '__main__':
     # workspace = 'G:\Glacier\GD_ICEH_iceHabitat\data\test\'
     # workspace = 'G:/Glacier/GD_ICEH_iceHabitat/data/test/'
-    workspace = 'G:/Glacier/GD_ICEH_iceHabitat/data/test' #does better without trailing space (I think)
-    workspace2 = Path('G:/Glacier/GD_ICEH_iceHabitat/data/test') #does better without trailing space (I think)
+
+    # workspace = 'G:/Glacier/GD_ICEH_iceHabitat/data/test' #does better without trailing slash (I think)
+    workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data/test') #Path would take care of trailing slash
+
     #workspace = 'G:\\Glacier\\GD_ICEH_iceHabitat\\data\\test\\'
     #workspace = '/hdd3/opensource/iceberg_tracking/data/test/'
     detect_interval = 3 #set between 2 and 4
