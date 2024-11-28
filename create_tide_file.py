@@ -1,11 +1,14 @@
+#AKB started to convert... need internet. need to add pandas to conda env
 import requests
 import pickle
 import pandas as pd
+from pathlib import Path
 
-''' Downloads tide data from Noaa at Tar inlet, you can change station number to retrieve data from other places'''
+''' Downloads tide data from NOAA at Tarr Inlet, you can change station number to retrieve data from other places'''
 
 # specify the pickle file path
-pickle_file_path = '/hdd3/opensource/iceberg_tracking/data/'
+pickle_file_path = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
+# pickle_file_path = Path('/hdd3/opensource/iceberg_tracking/data')
 output_filename = 'tide_2019.pickle'
 
 # specify the base URL
@@ -47,5 +50,5 @@ df = df.rename(columns={'t': 'date', 'v': 'depth_tide_ellipsoid'})
 df['date'] = pd.to_datetime(df['date'])
 
 # save the DataFrame to the pickle file
-df.to_pickle(pickle_file_path + output_filename)
+df.to_pickle(pickle_file_path/output_filename)
 
