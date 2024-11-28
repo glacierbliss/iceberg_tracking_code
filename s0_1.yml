@@ -175,6 +175,7 @@ dependencies:
   - openssl=3.4.0=h2466b09_0
   - overrides=7.7.0=pyhd8ed1ab_0
   - packaging=24.2=pyhff2d567_1
+  - pandas=2.2.2=py312h72972c8_1
   - pandocfilters=1.5.0=pyhd8ed1ab_0
   - pango=1.54.0=hbb871f6_2
   - parso=0.8.4=pyhd8ed1ab_0
@@ -202,6 +203,7 @@ dependencies:
   - python-dateutil=2.9.0.post0=pyhff2d567_0
   - python-fastjsonschema=2.20.0=pyhd8ed1ab_0
   - python-json-logger=2.0.7=pyhd8ed1ab_0
+  - python-tzdata=2024.2=pyhd8ed1ab_0
   - python_abi=3.12=5_cp312
   - pytz=2024.2=pyhd8ed1ab_0
   - pywin32=307=py312h275cf98_3
