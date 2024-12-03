@@ -8,6 +8,7 @@ from pathlib import Path
 
 # specify the pickle file path
 pickle_file_path = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
+# pickle_file_path = Path(r'C:\Users\andyb\Documents\U/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
 # pickle_file_path = Path('/hdd3/opensource/iceberg_tracking/data')
 output_filename = 'tide_2019.pickle'
 
@@ -21,7 +22,13 @@ params = {
     "begin_date": "20190724",  # replace with your start date
     "end_date": "20190726",  # replace with your end date
     "datum": "MLLW",
-    "station": "9452749",  # replace with your station number
+    #"station": "", replace with your station number
+    "station": "9452749",  #Tarr Inlet, Glacier Bay
+    # "station": "9452634",  #Elfin Cove (with real-time data)
+    # "station": "9453220",  #Yakutat Bay (with real-time data)
+    # "station": "9452584",  #Muir Inlet, Glacier Bay. Muir subordinate - different data output?
+    # "station": "9452534",  #Bartlett Cove (and note that there are a few more in GLBA)
+    # "station": "9453210",  #Point Latouche, Yakutat Bay (south of Haenke Island)
     "time_zone": "GMT",
     "units": "metric",
     "interval": "1",
@@ -52,3 +59,13 @@ df['date'] = pd.to_datetime(df['date'])
 # save the DataFrame to the pickle file
 df.to_pickle(pickle_file_path/output_filename)
 
+#AKB added
+# plot the tide levels
+df.set_index('date', inplace=True) # Set 'date' as the index
+df.plot(df.index,df['depth_tide_ellipsoid'])
+
+df.plot(x=df['date'],y=df['depth_tide_ellipsoid'])
+plt.show()
+
+df.plot()
+plt.show()
