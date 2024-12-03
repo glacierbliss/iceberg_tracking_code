@@ -59,54 +59,28 @@ df['date'] = pd.to_datetime(df['date'])
 # save the DataFrame to the pickle file
 df.to_pickle(pickle_file_path/output_filename) #pathlib overloads division '/'
 
-########
-#AKB added
-#########
-dfp = pd.read_pickle(pickle_file_path/output_filename)
-df=dfp
-# was having trouble plotting due to type:
-type(df['depth_tide_ellipsoid'])
-# <class 'pandas.core.series.Series'>
-type(df['depth_tide_ellipsoid'][1])
-# <class 'str'>
-df.dtypes
-df['depth_tide_ellipsoid'].dtypes
-
-#astype(str)
-#to_numeric
-df['depth_tide_ellipsoidNum']=pd.to_numeric(df['depth_tide_ellipsoid'])
-# A value is trying to be set on a copy of a slice from a DataFrame.
-# Try using .loc[row_indexer,col_indexer] = value instead
-df[:,'depth_tide_ellipsoidNum']=pd.to_numeric(df['depth_tide_ellipsoid'])
-#raise InvalidIndexError(key)
-df.loc[:,'depth_tide_ellipsoidNum']=pd.to_numeric(df['depth_tide_ellipsoid'])
-#worked
-df.loc[:,'depth_tide_ellipsoidAlt']=df['depth_tide_ellipsoid']
-# df['depth_tide_ellipsoidAlt']=pd.to_numeric(df['depth_tide_ellipsoid'])
-df.loc[:,'depth_tide_ellipsoid']=pd.to_numeric(df['depth_tide_ellipsoid'])
+##########
+#plot the tide levels (AKB added)
+##########
+# df = pd.read_pickle(pickle_file_path/output_filename)
+df['depth_tide_ellipsoid']=pd.to_numeric(df['depth_tide_ellipsoid'])
+#or:
+# df.loc[:,'depth_tide_ellipsoid']=pd.to_numeric(df['depth_tide_ellipsoid'])
 
 import matplotlib.pyplot as plt
-# # plot the tide levels
-# df.set_index('date', inplace=True) # Set 'date' as the index
-# df.plot(df.index,df['depth_tide_ellipsoid'])
+# df2=df.copy()
+# df2.set_index('date', inplace=True) # Set 'date' as the index
+# plt.figure(figsize=(10, 6))
+# df2.plot(df2['depth_tide_ellipsoid'])
+# plt.show()
 # 
 # df.plot(x=df['date'],y=df['depth_tide_ellipsoid'])
 # plt.show()
-# 
-# df.plot()
-# plt.show()
-df2=df
-df=df2
-df=df[0:50]
 plt.figure(figsize=(10, 6))
-# plt.plot(df.index, df['depth_tide_ellipsoid'])
-# plt.scatter(df.index, df['depth_tide_ellipsoid'])
 plt.plot(df['date'], df['depth_tide_ellipsoid'])
-# plt.scatter(df['date'], df['depth_tide_ellipsoid'])
-plt.xlabel('Date')
 plt.xticks(rotation=45, ha='right')
-plt.ylabel('Value')
-plt.title('Time Series Plot')
+plt.ylabel('Tide (m)')
+plt.title(f'Tide at {params['station']}')
 plt.grid(False)
 plt.tight_layout() #helps, but not enough
 plt.subplots_adjust(bottom=0.2,left=.15)
