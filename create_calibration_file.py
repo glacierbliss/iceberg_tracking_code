@@ -1,9 +1,8 @@
-#AKB started to convert... need internet. need to add pandas to conda env
+# This script creates combinations of values to be tested in calibration step and loads them into an excel file
 import numpy as np
 import itertools
 import pandas as pd
 from pathlib import Path
-# This script creates combinations of values to be tested in calibration step and loads them into an excel file
 
 #Variables for excel file
 data = {
@@ -43,7 +42,7 @@ combinations = list(itertools.product(sigma_min,theta_min,phi_min,psi_min))
 
 #Create dataframe
 df = pd.DataFrame(combinations, columns=['sigma_min', 'theta_min', 'phi_min', 'psi_min'])
-#AKB note: what are these edits for?
+#set max values based on min values
 df ['sigma_max'] = df['sigma_min'] + 4
 df ['theta_max'] = df['theta_min'] + 40
 df ['phi_max'] = df['phi_min'] + 4
@@ -55,4 +54,6 @@ df_combined = pd.concat([df1_repeated, df], axis=1)
 
 #Save to excel
 # df_combined.to_excel('data/sample_data/calibration_combinations_all.xlsx', index=False)
-df_combined.to_excel(Path('G:/Glacier/GD_ICEH_iceHabitat/data/sample_data/calibration_combinations_all.xlsx', index=False)
+df_combined.to_excel(Path('G:/Glacier/GD_ICEH_iceHabitat/data/sample_data/calibration_combinations_all.xlsx'), index=False)
+# df_combined.to_excel(Path(r'D:\U\Glacier\GD_ICEH_iceHabitat/JUNK_calibration_combinations_all.xlsx'), index=False)
+
