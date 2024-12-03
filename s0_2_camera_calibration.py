@@ -11,6 +11,7 @@ import geopandas as gpd
 import datetime as dt
 
 import shapefile
+from pathlib import Path
 
 #%% functions for shapefile reading and writing
 
@@ -460,7 +461,8 @@ def convert_shp_to_npz(shp_file):
 
 if __name__ == '__main__':
     
-    workspace = '/hdd3/opensource/iceberg_tracking/data'
+    # workspace = '/hdd3/opensource/iceberg_tracking/data'
+    workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
     calibration_filename = 'calibration_input_2019.xlsx'
     fjord_outline = 'fjord_outline.shp'
     output_file = 'parameter_file_2019.xlsx'

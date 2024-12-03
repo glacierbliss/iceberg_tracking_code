@@ -182,9 +182,7 @@ class LucasKanade:
 
        
 if __name__ == '__main__':
-    # workspace = 'G:/Glacier/GD_ICEH_iceHabitat/data/test' #does better without trailing slash (I think)
     # workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data/test') #Path would take care of trailing slash
-    #workspace = '/hdd3/opensource/iceberg_tracking/data/test/'
     workspace = Path('/hdd3/opensource/iceberg_tracking/data/test/')
     detect_interval = 3 #set between 2 and 4
     time_spacing = 120 #set between 60 and 240
