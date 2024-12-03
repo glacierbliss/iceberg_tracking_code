@@ -26,7 +26,7 @@ params = {
     "station": "9452749",  #Tarr Inlet, Glacier Bay
     # "station": "9452634",  #Elfin Cove (with real-time data)
     # "station": "9453220",  #Yakutat Bay (with real-time data)
-    # "station": "9452584",  #Muir Inlet, Glacier Bay
+    # "station": "9452584",  #Muir Inlet, Glacier Bay. Muir subordinate - different data output?
     # "station": "9452534",  #Bartlett Cove (and note that there are a few more in GLBA)
     # "station": "9453210",  #Point Latouche, Yakutat Bay (south of Haenke Island)
     "time_zone": "GMT",
