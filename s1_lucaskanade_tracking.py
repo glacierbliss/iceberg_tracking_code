@@ -20,6 +20,8 @@ from imports.stop_watch import stop_watch
 import imports.utilities as util
 import imports.camtools as ct
 
+from pathlib import Path
+
 #%%
 
 ''' 
@@ -103,14 +105,22 @@ def main():
     
     # parameters
     camnames = ['cam4']
-    source_workspace = '/hdd3/opensource/iceberg_tracking/data/'
-    target_workspace = '/hdd3/opensource/iceberg_tracking/output/'    
+    # source_workspace = Path('/hdd3/opensource/iceberg_tracking/data/')
+    source_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
+    
+    #temporary
+    source_workspace = Path(r'D:\U\Glacier\GD_ICEH_iceHabitat\data') #Path would take care of trailing slash
+    source_workspace = str(source_workspace)
+    
+    # target_workspace = Path('/hdd3/opensource/iceberg_tracking/output/')
+    target_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output') #Path would take care of trailing slash
+    target_workspace = Path(r'D:\U\Glacier\GD_ICEH_iceHabitat\output') #Path would take care of trailing slash
         
     paramfile_name = 'parameter_file_2019.xlsx'
     
     min_date = 20190724
     max_date = 20190726
-    n_proc = 8
+    n_proc = 14
 
     track_len = 2
     startlist =  [0] 
@@ -118,27 +128,38 @@ def main():
     
     plot_switch = 1
     movie_switch = 1
-    delete_jpgs_switch = 1
+    delete_jpgs_switch = 0
     
     #--------------------------------------------------------------------------
     
     # determine directory of current script (does not work in interactive mode)
-    file_path = osp.dirname(osp.realpath(__file__))
+    # file_path = osp.dirname(osp.realpath(__file__))
+    file_path = source_workspace #AKB note: shouldn't this be the same???
     
     # read parameter file      
-    paramfile_path = osp.join(file_path, paramfile_name)             
+    # paramfile_path = osp.join(file_path, paramfile_name)             
+    paramfile_path = Path(file_path, paramfile_name)             
     paramfile = pd.read_excel(paramfile_path)
     
     # Create a README file in the target_workspace with tracklength and startlist information 
-    with open(osp.join(target_workspace, 'README.md'), 'w') as f:
-        f.write(f"Track Length: {track_len}\n,")
-        f.write(f"Start List: {startlist}\n,")   
-        f.write(f"Cameras: {camnames}\n,")
-        f.write(f"Time Period: {min_date} - {max_date}\n,")
+    #AKB note: does this get used anywhere? I can find another reference to it in code
+    #     assume it is just for user and so format doesn't matter. Adjusting commas...
+    # with open(osp.join(target_workspace, 'README.md'), 'w') as f:
+    #     f.write(f"Track Length: {track_len}\n,")
+    #     f.write(f"Start List: {startlist}\n,")   
+    #     f.write(f"Cameras: {camnames}\n,")
+    #     f.write(f"Time Period: {min_date} - {max_date}\n,")
+    #     f.write(f"Parameters: {paramfile_name}\n")
+    # 
+    #     #AKB note: why is this repeated?
+    #     for item in startlist:
+    #         f.write(f"- {item}\n")
+    with open(Path(target_workspace, 'README.md'), 'w') as f:
+        f.write(f"Track Length: {track_len}\n")
+        f.write(f"Start List: {startlist}\n")   
+        f.write(f"Cameras: {camnames}\n")
+        f.write(f"Time Period: {min_date} - {max_date}\n")
         f.write(f"Parameters: {paramfile_name}\n")
-
-        for item in startlist:
-            f.write(f"- {item}\n")
 
     # start timer
     sw = stop_watch()
@@ -157,18 +178,15 @@ def main():
         workspaces = sorted(glob.glob(osp.join(source_workspace, camname, '20??????')))
         # keep only folders within the defined time range     
         for wsp in workspaces[:]:
-            
             if int(osp.basename(wsp)) < min_date or int(osp.basename(wsp)) > max_date:
-                
                 workspaces.remove(wsp)
+
         foldernr = len(workspaces)
         if foldernr == 0:
-            
             print('No photos available for camera {} in timeperiod {}-{}'.format(camname, min_date, max_date))
          
         # loop over the daily folders and launch tracking script for each folder 
         for counter, wsp in enumerate(workspaces, start = 1):
-            
             date = osp.basename(wsp)
                     
             # obtain the parameters for day of interest
@@ -183,6 +201,7 @@ def main():
                 continue
             
             tgw = osp.join(target_workspace, camname, 'oblique', osp.basename(wsp))
+            # tgw = Path(target_workspace, camname, 'oblique', osp.basename(wsp))
             
             # create a new folder in the results workspace if folder does not yet exist
             if osp.isdir(tgw) == 0:
@@ -230,13 +249,17 @@ def lucaskanade_tracking(ws_source, ws_target, camname, track_len, track_len_sec
     
     # list the imagery in the original folder  
     imagelist = sorted(glob.glob(ws_source + '/*.jpg'))
-    
+    #AKB NOTE: ws_source is string now, if it were Path, then would use this:
+    # imagelist=sorted(ws_source.glob('*.jpg'))
+
     # avoid folders with image_numbers smaller than track length (would throw errors)
     if len(imagelist) > track_len:
         
         # create a new folder in the target workspace if folder does not exist
+        #AKB NOTE: does mkdirs above take care of all these, or are there more cases?
         if osp.isdir(ws_target) == 0:
             os.mkdir(ws_target)
+            print(f'mkdir in loop ran for {ws_target}')
                 
         # crop the photos with camera specific values (specified in the excel file) 
         # and save the cropped images in the target folder

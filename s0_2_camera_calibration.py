@@ -51,7 +51,9 @@ def x_y_from_shapefile(shp, tuples = 0):
     
 def x_y_z_from_shapefile(shp):
     
-    '''extracts the x, y and z coordinates from points digitized on UTM data'''
+    '''extracts the x, y and z coordinates from points digitized on UTM data. 
+    Assuming z is at sea level = 0 m.
+    '''
     
     shapes = shapefile.Reader(shp).shapes()
     
@@ -80,7 +82,7 @@ def create_shapefile(basepath, df, E, N, x, y, imwidth, imheight, sensor_width, 
     w = shapefile.Writer(shapename,shapefile.POINT)
     w.field('iteration', 'N')
 
-    # obtain the absolut best combinations
+    # obtain the absolute best combinations
     best_theta = df['theta']
     best_phi = df['phi']
     best_psi = df['psi']
@@ -104,8 +106,9 @@ def create_shapefile(basepath, df, E, N, x, y, imwidth, imheight, sensor_width, 
            
     # w.save(shapename)  
     
-    prj = open(shapename[:-3] + 'prj', "w")
-    epsg = get_wkt_prj(32608)
+    # prj = open(shapename[:-3] + 'prj', "w")
+    prj = open(shapename.with_suffix('.prj'), "w") #pathlib way of doing things.
+    epsg = get_wkt_prj(32608) #TODO: make this an input parameter or get it from satllite image fjord_outline.shp?
     prj.write(epsg)
     prj.close() 
     
@@ -281,7 +284,8 @@ def run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
     import lmfit
     
     # read input file into dataframe (contains input parameters for calibration)   
-    df = pd.read_excel(osp.join(workspace, calibration_filename))
+    # df = pd.read_excel(osp.join(workspace, calibration_filename))
+    df = pd.read_excel(Path(workspace, calibration_filename))
     
     # add new, empty columns to dataframe
     df = df.reindex(columns = df.columns.tolist() + ['H', 'theta', 'phi', 'psi', 
@@ -324,12 +328,14 @@ def run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
         
         # load the tides (contains tide value for each minute) 
         if tide_file is not None:
-            tides = pd.read_pickle(workspace + '/data/' + tide_file)
+            # tides = pd.read_pickle(workspace + '/data/' + tide_file)
+            tides = pd.read_pickle(Path(workspace,tide_file)) #workspace already includes /data/
 
             # find the current tide value
             current_tide = tides.loc[tides['date'] == imagetime]['depth_tide_ellipsoid'].iloc[0]
+            current_tide=float(current_tide)
         
-            # account for GPS anntenna height and tide (negative tide increases H)
+            # account for GPS antenna height and tide (negative tide increases H)
             H = H - antenna_height - current_tide 
 
         else:
@@ -338,12 +344,17 @@ def run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
         
         # load waterline coordinates from oblique photograph
         # points were previously digitized along the waterline and saved to a shapefile
-        shoreline_points = osp.join(workspace, cam, time_string + '.shp')
+        # shoreline_points = osp.join(workspace, cam, time_string + '.shp')
+        shoreline_points = Path(workspace, cam, time_string + '_' + cam + '.shp') #AKB added "'_' + cam + " to match instruction document
         [x, y] = x_y_from_shapefile(shoreline_points)
+        # plt.scatter(x,y)
+        # plt.show()
         
         # load utm waterline coordinates, previously digitized from satellite image 
         # select .npz file that matches the region covered by the cam         
-        fjord_npz = convert_shp_to_npz(workspace + '/' + fjord_outline)
+        # fjord_npz = convert_shp_to_npz(workspace + '/' + fjord_outline)
+        fjord_npz = convert_shp_to_npz(Path(workspace,fjord_outline))
+        #AKB NOTE: gives warning, but can proceed... Warning 3: Cannot find header.dxf (GDAL_DATA is not defined)
 
         fjord = np.load(fjord_npz)      
 
@@ -416,12 +427,16 @@ def run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
             df.at[index, 'tide'] = round(current_tide, 2)
         #------------------------------------------ 
         # create shapefile to visually check the best projection in a GIS, but only if RMSE is less than 1000
-        if rmse < 1000:
-            shapename = osp.join(workspace, cam, f'shoreline_{index+1}_{time_string}_utm.shp')
+        # if rmse < 1000:
+        if rmse < 1e100:
+            # shapename = osp.join(workspace, cam, f'shoreline_{index+1}_{time_string}_utm.shp')
+            shapename = Path(workspace, cam, f'shoreline_{cam}_{time_string}_utm.shp') #substitute cam for index+1 in case non-consecutive
             print(shapename)
            
             create_shapefile(workspace, df.iloc[index, :], E, N, x, y, imwidth, 
                             imheight, sensor_width, shapename)
+        else:
+            print('RMSE too big to create shapefile')
     
     # delete columns in the dataframe    
     del_fields = ['image', 'imagefolder', 'sigma_min', 'sigma_max', 'theta_min', 
@@ -430,10 +445,12 @@ def run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
     for field in del_fields:
         del df[field]
         
-    # save to final excel parameter file                
-    df.to_excel(workspace + '/' + output_file, index = 0)
+    # save to final excel parameter file
+    # df.to_excel(workspace + '/' + output_file, index = 0)
+    df.to_excel(Path(workspace,output_file), index = 0)
 
 def convert_shp_to_npz(shp_file):
+    '''create numpy zip file for shape'''
     # Read the shapefile
     gdf = gpd.read_file(shp_file)
 
@@ -448,6 +465,7 @@ def convert_shp_to_npz(shp_file):
     base_name = os.path.splitext(shp_file)[0]
     npz_file = base_name + '.npz'
 
+    #AKB NOTE: Better to just recreate npz each time? This way requires user to know to delete .npz if shapefile is updated.
     # Check if the file already exists
     if not os.path.exists(npz_file):
         # If the file doesn't exist, save the 'x' and 'y' arrays to a .npz file
@@ -463,11 +481,11 @@ if __name__ == '__main__':
     
     # workspace = '/hdd3/opensource/iceberg_tracking/data'
     workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
-    calibration_filename = 'calibration_input_2019.xlsx'
     fjord_outline = 'fjord_outline.shp'
+    calibration_filename = 'calibration_input_2019.xlsx'
     output_file = 'parameter_file_2019.xlsx'
+    calibration_filename = 'calibration_combinations_all.xlsx'
+    output_file = 'parameter_file_all.xlsx'
    
-    
-                
     run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
 # %%
