@@ -20,7 +20,7 @@ params = {
     "product": "predictions",
     "application": "NOS.COOPS.TAC.WL",
     "begin_date": "20190724",  # replace with your start date
-    "end_date": "20190726",  # replace with your end date
+    "end_date": "20190731",  # replace with your end date. AKB adjusted to catch photos used for shapefiles
     "datum": "MLLW",
     #"station": "", replace with your station number
     "station": "9452749",  #Tarr Inlet, Glacier Bay
@@ -58,6 +58,9 @@ df['date'] = pd.to_datetime(df['date'])
 
 # save the DataFrame to the pickle file
 df.to_pickle(pickle_file_path/output_filename) #pathlib overloads division '/'
+
+#AKB NOTE: this saves depth_tide_ellipsoid as text rather than numeric. 
+# s0_2_camera_calibration expects it as numeric. For now, leave this here, convert there.
 
 ##########
 #plot the tide levels (AKB added)
