@@ -436,7 +436,7 @@ def run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
             create_shapefile(workspace, df.iloc[index, :], E, N, x, y, imwidth, 
                             imheight, sensor_width, shapename)
         else:
-            print('RMSE too big to create shapefile')
+            print(f'RMSE too big to create shapefile. RMSE={rmse}')
     
     # delete columns in the dataframe    
     del_fields = ['image', 'imagefolder', 'sigma_min', 'sigma_max', 'theta_min', 
@@ -484,8 +484,8 @@ if __name__ == '__main__':
     fjord_outline = 'fjord_outline.shp'
     calibration_filename = 'calibration_input_2019.xlsx'
     output_file = 'parameter_file_2019.xlsx'
-    calibration_filename = 'calibration_combinations_all.xlsx'
-    output_file = 'parameter_file_all.xlsx'
+    # calibration_filename = 'calibration_combinations_all.xlsx'
+    # output_file = 'parameter_file_all.xlsx'
    
     run_calibration(workspace,calibration_filename,fjord_outline,tide_file=None)
 # %%

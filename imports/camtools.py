@@ -149,7 +149,9 @@ class Camera(object):
         if mask == 1:
             
             # concatenate path to mask shapefile
-            shp = osp.join(osp.dirname(paramfile_path), 'data', camname, parameters['mask'].iloc[0]) 
+            # shp = osp.join(osp.dirname(paramfile_path), 'data', camname, parameters['mask'].iloc[0]) 
+            #AKB NOTE: there was an extra 'data' in here. Better might be to pass the path in, but will leave for now.
+            shp = osp.join(osp.dirname(paramfile_path), camname, parameters['mask'].iloc[0]) 
             
             self.maskpoly = x_y_from_shapefile(shp, tuples = 1)
             
