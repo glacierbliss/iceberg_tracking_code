@@ -15,6 +15,7 @@ from PIL import Image
 
 import matplotlib.pyplot as plt 
 from matplotlib import collections as mc
+import matplotlib.animation as animation #AKB added for Windows animation
 
 from imports.stop_watch import stop_watch 
 import imports.utilities as util
@@ -104,23 +105,24 @@ NOTE:
 def main():
     
     # parameters
-    camnames = ['cam4']
+    # camnames = ['cam4']
+    camnames = ['cam1','cam2','cam3','cam4']
     # source_workspace = Path('/hdd3/opensource/iceberg_tracking/data/')
     source_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
     
-    #temporary
-    source_workspace = Path(r'D:\U\Glacier\GD_ICEH_iceHabitat\data') #Path would take care of trailing slash
-    source_workspace = str(source_workspace)
+    # #temporary
+    # source_workspace = Path(r'D:\U\Glacier\GD_ICEH_iceHabitat\data') #Path would take care of trailing slash
+    # source_workspace = str(source_workspace)
     
     # target_workspace = Path('/hdd3/opensource/iceberg_tracking/output/')
     target_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output') #Path would take care of trailing slash
-    target_workspace = Path(r'D:\U\Glacier\GD_ICEH_iceHabitat\output') #Path would take care of trailing slash
+    # target_workspace = Path(r'D:\U\Glacier\GD_ICEH_iceHabitat\output') #Path would take care of trailing slash
         
     paramfile_name = 'parameter_file_2019.xlsx'
     
     min_date = 20190724
     max_date = 20190726
-    n_proc = 14
+    n_proc = 8 #14
 
     track_len = 2
     startlist =  [0] 
@@ -134,13 +136,17 @@ def main():
     
     # determine directory of current script (does not work in interactive mode)
     # file_path = osp.dirname(osp.realpath(__file__))
-    file_path = source_workspace #AKB note: shouldn't this be the same???
-    
+    file_path=Path(r'D:\U\iceberg_tracking_code')
+
     # read parameter file      
     # paramfile_path = osp.join(file_path, paramfile_name)             
-    paramfile_path = Path(file_path, paramfile_name)             
+    paramfile_path = Path(source_workspace, paramfile_name)             
     paramfile = pd.read_excel(paramfile_path)
     
+    # create a new folder in the results workspace if folder does not yet exist
+    if osp.isdir(target_workspace) == 0:
+        os.makedirs(target_workspace)
+        
     # Create a README file in the target_workspace with tracklength and startlist information 
     #AKB note: does this get used anywhere? I can find another reference to it in code
     #     assume it is just for user and so format doesn't matter. Adjusting commas...
@@ -171,7 +177,7 @@ def main():
     
     for camname in camnames:
         
-        print('processing: ' + camname)
+        print('\n\nprocessing: ' + camname) #\n\n adds blank lines
     
         # list daily folders in source workspace 
         # 20 followed by ? matches the folder name structure, e.g., 20180810
@@ -186,9 +192,10 @@ def main():
             print('No photos available for camera {} in timeperiod {}-{}'.format(camname, min_date, max_date))
          
         # loop over the daily folders and launch tracking script for each folder 
-        for counter, wsp in enumerate(workspaces, start = 1):
+        #TODO: parallelize here?
+        for counter, wsp in enumerate(workspaces, start = 1): #start is starting value for the counter
             date = osp.basename(wsp)
-                    
+
             # obtain the parameters for day of interest
             # parameters are used to crop the images and mask the fjord
             parameters = paramfile.loc[(paramfile['camera'] == camname) & 
@@ -197,7 +204,7 @@ def main():
             
             # if there are no parameters, skip that day
             if len(parameters) == 0:
-                print(date + ': no parameter file for this day available')
+                print(camname + ' ' + date + ': no parameter file for this day available')
                 continue
             
             tgw = osp.join(target_workspace, camname, 'oblique', osp.basename(wsp))
@@ -210,12 +217,12 @@ def main():
             # obtain time difference between photos from parameter file 
             track_len_sec = parameters['tracking_interval'].iloc[0] 
                                           
-            lucaskanade_tracking(wsp, tgw, camname, track_len, track_len_sec,
+            lucaskanade_tracking(file_path, wsp, tgw, camname, track_len, track_len_sec,
                               startlist, mask_switch, plot_switch,
                               movie_switch, delete_jpgs_switch, paramfile_path, 
                               n_proc)
                         
-            print('Folder {} / {} done'.format(counter, foldernr))
+            print('Folder {} / {} done for {} {}'.format(counter, foldernr,camname, date))
     
             sw.print_intermediate_time()
                 
@@ -225,7 +232,7 @@ def main():
     
 #%%
     
-def lucaskanade_tracking(ws_source, ws_target, camname, track_len, track_len_sec, 
+def lucaskanade_tracking(file_path, ws_source, ws_target, camname, track_len, track_len_sec, 
                          startlist, mask_switch, plot_switch, movie_switch, 
                          delete_jpgs_switch, paramfile_path, n_proc):
     
@@ -417,7 +424,7 @@ def lucaskanade_tracking(ws_source, ws_target, camname, track_len, track_len_sec
                                 fig.tight_layout()
                                 
                                 util.annotatefun(ax, ['Displacement over {} seconds, tracking every {} seconds'.format(track_len * track_len_sec, 
-                                                      track_len_sec), osp.splitext(osp.basename(image))[0]], 0.03, 0.93, fonts = 22, col = 'white')
+                                                      track_len_sec), osp.splitext(osp.basename(image))[0]], 0.03, 0.93, fonts = 22, col = '#2b8cbe') #'white')
                                               
                                 plotname = '{}/{}_{}sec.png'.format(plot_ws, osp.splitext(osp.basename(image))[0], 
                                             track_len * track_len_sec)
@@ -446,8 +453,43 @@ def lucaskanade_tracking(ws_source, ws_target, camname, track_len, track_len_sec
         
             # determine whether Linux or Windows
             if platform.system() == 'Windows':
+                print('  Movie compilation works on Linux only, skipping...')
+                # Function to create an animation from folder of images and save as MP4
+                def create_animation(folder_images, file_anim, duration=500):
+                    # List all files in the folder and filter for image files
+                    image_files = [f for f in os.listdir(folder_images) if f.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'bmp'))]
+                    image_files.sort()  # Sort the files to maintain the correct order
                 
-                print('Movie compilation works on Linux only, skipping...')
+                    # Load the images into a list
+                    images = []
+                    for f in image_files: #f=image_files[0]
+                        image_path = os.path.join(folder_images, f)
+                        img = Image.open(image_path)
+                        images.append(img)
+                    
+                    # Create a figure with the dimensions desired for the video
+                    scalefactor=1 #set to 3 to reduce size by a factor of 3
+                    figw=images[0].size[0]/100/scalefactor #/100 account for dpi, reduce size by scalefactor
+                    figh=images[0].size[1]/100/scalefactor
+                    fig = plt.figure(figsize=(figw,figh), dpi=100)
+                    # Add an axes to the figure
+                    ax = fig.add_axes([0, 0, 1, 1])  # Full size
+                    ax.axis('off')  # Hide the axis
+                
+                    # Function to update the image in the animation
+                    def update_frame(i):
+                        ax.clear()  # Clear the previous frame
+                        ax.axis('off')  # Keep the axis hidden
+                        ax.imshow(images[i])  # Show the current image (defaults to aspect='equal')
+                    
+                    # Create the shell of the animation
+                    ani = animation.FuncAnimation(fig, update_frame, frames=len(images), interval=duration, repeat=True, repeat_delay=1000)
+                    # Save the animation as video using ffmpeg (the real work)
+                    ani.save(Path(folder_images,file_anim), writer='ffmpeg', fps=30)
+                
+                    print(f"Animation saved as {file_anim} in {folder_images}")
+                
+                create_animation(plot_ws, 'tracks_oblique_{}sec.avi'.format(track_len * track_len_sec))
                 
             else:
         
@@ -456,7 +498,8 @@ def lucaskanade_tracking(ws_source, ws_target, camname, track_len, track_len_sec
                 moviename = 'tracks_oblique_{}sec.avi'.format(track_len * track_len_sec) 
                 
                 # determine directory of current script (does not work in interactive mode)
-                file_path = osp.dirname(osp.realpath(__file__))
+                #NOTE: commmented here, now gets passed in.
+                # file_path = osp.dirname(osp.realpath(__file__))
                    
                 shell_script = osp.join(file_path, 'imports', 'timelapse.sh') 
         
