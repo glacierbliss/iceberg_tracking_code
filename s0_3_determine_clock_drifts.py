@@ -11,7 +11,7 @@ def prepare_correction_cam_drift(workspace):
     calculates time drifts at the beginning and end of the deployment  
     also calculates time drift change in seconds per day'''
         
-    df = pd.read_excel(osp.join(workspace, 'data/camera_time_drifts_input.xlsx'))
+    df = pd.read_excel(osp.join(workspace,'camera_time_drifts_input.xlsx'))
     
     # add new empty columns
     df = df.reindex(columns = df.columns.tolist() + ['day_diff', 'drift_start_sec', 
@@ -45,19 +45,28 @@ def prepare_correction_cam_drift(workspace):
         # determine drift change from start to end of campaign
         drift_change = drift_end_sec - drift_start_sec   
         
-        df.set_value(index, 'day_diff', day_diff)
-        df.set_value(index, 'drift_start_sec', drift_start_sec)
-        df.set_value(index, 'drift_end_sec', drift_end_sec)
-        df.set_value(index, 'drift_pday_sec', float(drift_change) / day_diff)
+        # df.set_value(index, 'day_diff', day_diff)
+        # df.set_value(index, 'drift_start_sec', drift_start_sec)
+        # df.set_value(index, 'drift_end_sec', drift_end_sec)
+        # df.set_value(index, 'drift_pday_sec', float(drift_change) / day_diff)
+        #set_value retired after pandas version 1.0.0
+        df.at[index, 'day_diff']=day_diff
+        df.at[index, 'drift_start_sec']=drift_start_sec
+        df.at[index, 'drift_end_sec']=drift_end_sec
+        df.at[index, 'drift_pday_sec']=float(drift_change) / day_diff
+        #TODO: more accurate would be to divide by time difference in fractional
+        #days. Won't matter for longer intervals, such as time between field visits.
           
-    df.to_excel(osp.join(workspace, 'data/camera_time_drifts.xlsx'), 
+    df.to_excel(osp.join(workspace,'camera_time_drifts.xlsx'), 
                    index = 0)
                    
 if __name__ == '__main__':
     
-    # workspace = '.../.../iceberg_tracking'
+    # workspace = '.../.../iceberg_tracking/data'
+    workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data')
     
     # determine directory of current script (does not work in interactive mode)
-    workspace = osp.dirname(osp.realpath(__file__))
+    # workspace = osp.dirname(osp.realpath(__file__))
+    # workspace=osp.join(workspace, 'data')
     
     prepare_correction_cam_drift(workspace)
