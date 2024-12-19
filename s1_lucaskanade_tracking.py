@@ -15,7 +15,6 @@ from PIL import Image
 
 import matplotlib.pyplot as plt 
 from matplotlib import collections as mc
-import matplotlib.animation as animation #AKB added for Windows animation
 
 from imports.stop_watch import stop_watch 
 import imports.utilities as util
@@ -453,43 +452,9 @@ def lucaskanade_tracking(file_path, ws_source, ws_target, camname, track_len, tr
         
             # determine whether Linux or Windows
             if platform.system() == 'Windows':
-                print('  Movie compilation works on Linux only, skipping...')
-                # Function to create an animation from folder of images and save as MP4
-                def create_animation(folder_images, file_anim, duration=500):
-                    # List all files in the folder and filter for image files
-                    image_files = [f for f in os.listdir(folder_images) if f.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'bmp'))]
-                    image_files.sort()  # Sort the files to maintain the correct order
-                
-                    # Load the images into a list
-                    images = []
-                    for f in image_files: #f=image_files[0]
-                        image_path = os.path.join(folder_images, f)
-                        img = Image.open(image_path)
-                        images.append(img)
-                    
-                    # Create a figure with the dimensions desired for the video
-                    scalefactor=1 #set to 3 to reduce size by a factor of 3
-                    figw=images[0].size[0]/100/scalefactor #/100 account for dpi, reduce size by scalefactor
-                    figh=images[0].size[1]/100/scalefactor
-                    fig = plt.figure(figsize=(figw,figh), dpi=100)
-                    # Add an axes to the figure
-                    ax = fig.add_axes([0, 0, 1, 1])  # Full size
-                    ax.axis('off')  # Hide the axis
-                
-                    # Function to update the image in the animation
-                    def update_frame(i):
-                        ax.clear()  # Clear the previous frame
-                        ax.axis('off')  # Keep the axis hidden
-                        ax.imshow(images[i])  # Show the current image (defaults to aspect='equal')
-                    
-                    # Create the shell of the animation
-                    ani = animation.FuncAnimation(fig, update_frame, frames=len(images), interval=duration, repeat=True, repeat_delay=1000)
-                    # Save the animation as video using ffmpeg (the real work)
-                    ani.save(Path(folder_images,file_anim), writer='ffmpeg', fps=30)
-                
-                    print(f"Animation saved as {file_anim} in {folder_images}")
-                
-                create_animation(plot_ws, 'tracks_oblique_{}sec.avi'.format(track_len * track_len_sec))
+                #AKB added create_animation code to utilities.py
+                #this version may work on Linux too, only tested for Windows
+                util.create_animation(plot_ws, 'tracks_oblique_{}sec.avi'.format(track_len * track_len_sec))
                 
             else:
         
