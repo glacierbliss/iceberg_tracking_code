@@ -18,21 +18,21 @@ def read_pickle(filename):
 
 def symbols_ck(keyword):
     if keyword == 'degreeC':
-        symb = '$\hspace{-0.1}{^\circ}\hspace{-0.25}$C'
+        symb = r'$\hspace{-0.1}{^\circ}\hspace{-0.25}$C'
     elif keyword == 'degree':
-        symb = '$\hspace{-0.1}{^\circ}\hspace{-0.25}$'
+        symb = r'$\hspace{-0.1}{^\circ}\hspace{-0.25}$'
     elif keyword == 'r2':
-        symb = 'r$\mathregular{^2} \!$'
+        symb = r'r$\mathregular{^2} \!$'
     elif keyword == 'km3':
-        symb = 'km$\mathregular{^3} \!$'
+        symb = r'km$\mathregular{^3} \!$'
     elif keyword == 'km2':
-        symb = 'km$\mathregular{^2} \!$'
+        symb = r'km$\mathregular{^2} \!$'
     elif keyword == 'm2':
-        symb = 'm$\mathregular{^2} \!$'
+        symb = r'm$\mathregular{^2} \!$'
     elif keyword == 'm3':
-        symb = 'm$\mathregular{^3} \!$'
+        symb = r'm$\mathregular{^3} \!$'
     elif keyword == 'delta':
-        symb = '$\Delta\!\!$ '
+        symb = r'$\Delta\!\!$ '
     else:
         symb = 'FALSE KEYWORD'
         
@@ -272,9 +272,57 @@ def format_date_axis(plt,ax,kw,rot=45,yr=10,sbyr=1):
     plt.setp(labels, rotation=rot)
 
     
+#------------------------------------------
+# map projection-related
+
 def get_wkt_prj(epsg_code):
     import urllib
     wkt = urllib.urlopen('http://spatialreference.org/ref/epsg/{0}/prettywkt/'.format(epsg_code))
     remove_spaces = wkt.read().replace(" ","")
     output = remove_spaces.replace("\n", "")
     return output
+
+#------------------------------------------
+# animation-related
+
+# Function to create an animation from folder of images (works on Windows, not tested on Linux)
+def create_animation(folder_images, file_anim, duration=500):
+    import os
+    from PIL import Image
+    import matplotlib.pyplot as plt 
+    import matplotlib.animation as animation
+    from pathlib import Path
+    
+    # List all files in the folder and filter for image files
+    image_files = [f for f in os.listdir(folder_images) if f.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'bmp'))]
+    image_files.sort()  # Sort the files to maintain the correct order
+
+    # Load the images into a list
+    images = []
+    for f in image_files: #f=image_files[0]
+        image_path = os.path.join(folder_images, f)
+        img = Image.open(image_path)
+        images.append(img)
+    
+    # Create a figure with the dimensions desired for the video
+    scalefactor=1 #set to 3 to reduce size by a factor of 3
+    figw=images[0].size[0]/100/scalefactor #/100 account for dpi, reduce size by scalefactor
+    figh=images[0].size[1]/100/scalefactor
+    fig = plt.figure(figsize=(figw,figh), dpi=100)
+    # Add an axes to the figure
+    ax = fig.add_axes([0, 0, 1, 1])  # Full size
+    ax.axis('off')  # Hide the axis
+
+    # Function to update the image in the animation
+    def update_frame(i):
+        ax.clear()  # Clear the previous frame
+        ax.axis('off')  # Keep the axis hidden
+        ax.imshow(images[i])  # Show the current image (defaults to aspect='equal')
+    
+    # Create the shell of the animation
+    ani = animation.FuncAnimation(fig, update_frame, frames=len(images), interval=duration, repeat=True, repeat_delay=1000)
+    # Save the animation as video using ffmpeg (the real work)
+    ani.save(Path(folder_images,file_anim), writer='ffmpeg', fps=30)
+
+    print(f"  Animation saved as {file_anim} in {folder_images}")
+
