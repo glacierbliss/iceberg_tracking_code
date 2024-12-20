@@ -1,5 +1,5 @@
 #!/usr/bin/env python
- 
+
 import os
 import os.path as osp
 import glob 
@@ -11,6 +11,8 @@ import datetime as dt
 from imports.stop_watch import stop_watch 
 import imports.tracking_misc as trm
 import imports.camtools as ct
+
+from pathlib import Path
 
 #%%
 
@@ -70,12 +72,23 @@ n_proc:
 def main():  
     
     # parameters
-    workspace = '/hdd3/opensource/iceberg_tracking/output/'
-    camnames = ['cam4'] 
+    # workspace = '/hdd3/opensource/iceberg_tracking/output/'
+    workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output') 
+
+    # camnames = ['cam4'] 
+    camnames = ['cam1','cam2','cam3','cam4']
     target_folder = 'utm'
         
     paramfile_name = 'parameter_file_2019.xlsx'
     tide_file_name = 'tide_2019.pickle'
+    # determine directory of current script (does not work in interactive mode)
+    # file_path = osp.dirname(osp.realpath(__file__))
+    # file_path = osp.join(file_path,'data')
+    file_path = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
+    # concatenate path to camera calibration file      
+    # paramfile_path = osp.join(file_path, paramfile_name) 
+    paramfile_path = Path(file_path, paramfile_name)             
+    tide_file_path = Path(file_path, tide_file_name)             
     
     min_date = 20190724
     max_date = 20190726
@@ -105,7 +118,7 @@ def main():
         
         n_proc_orig = n_proc 
                    
-        print('processing: ' + camname)
+        print('\nprocessing: ' + camname) #\n adds blank line
         
         # list the daily folders
         source_workspaces = sorted(glob.glob(osp.join(workspace, camname, 'oblique', '20??????')))
@@ -129,7 +142,7 @@ def main():
             
         # create list of tasks to be executed
         arguments = [(source_workspace, target_workspace, camname, max_speed, min_speed, 
-                      max_speedfactor, max_angle, speed_threshold, paramfile_name, tide_file_name) 
+                      max_speedfactor, max_angle, speed_threshold, paramfile_path, tide_file_path) 
                       for source_workspace in source_workspaces]
         
         if n_proc > 1:
@@ -150,20 +163,14 @@ def main():
 def cam_to_utm(arguments):
     
     (source_workspace, target_workspace, camname, max_speed, min_speed, 
-     max_speedfactor, max_angle, speed_threshold, paramfile_name, tide_file) =  arguments
+     max_speedfactor, max_angle, speed_threshold, paramfile_path, tide_file_path) =  arguments
     
-    # determine directory of current script (does not work in interactive mode)
-    file_path = osp.dirname(osp.realpath(__file__))
-    
-    # concatenate path to camera calibration file      
-    paramfile_path = osp.join(file_path, paramfile_name) 
-    
-    # obtain daytring from foldername
+    # obtain datestring from foldername
     datestring = osp.basename(source_workspace)
     
     # list npz files in the folder   
     npzs = sorted(glob.glob(source_workspace + '/*.npz'))
-    
+
     if len(npzs) > 0:
     
         # derive the image spacing (in seconds) from the first .npz file
@@ -228,7 +235,7 @@ def cam_to_utm(arguments):
             
             # create camera object
             cam = ct.Camera(camname = camname, date = datestring, paramfile_path = paramfile_path, 
-                            tide_corr = 1, tide_file = tide_file, datetime = npz_time)
+                            tide_corr = 1, tide_file = tide_file_path, datetime = npz_time)
             
             # 1) loop through each track (contains x and y in image coordinates), 
             # 2) convert to utm coordinates, 3) calculate u and v in m, 
