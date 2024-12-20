@@ -6,6 +6,7 @@ import multiprocessing
 import subprocess
 import glob
 import warnings
+import platform
 
 import pandas as pd
 import datetime as dt
@@ -25,6 +26,8 @@ from imports.stop_watch import stop_watch
 import imports.utilities as util
 import imports.tracking_misc as trm
 
+from pathlib import Path
+
 try:
     warnings.filterwarnings('ignore')
     mpl.rc("font", **{"sans-serif": ["Arial"]})
@@ -32,8 +35,8 @@ except:
     pass
 
 ''' 
-script to combine results from multiple cameras, to average velocity fields 
-spatially and temporally, and to plot the results
+s3_utm_to_gridded_utm.py script to combine results from multiple cameras, to 
+average velocity fields spatially and temporally, and to plot the results
 
 VARIABLES:
    
@@ -115,15 +118,27 @@ NOTE:
 def main():
     
     # parameters
-    source_path_head = '/hdd3/opensource/iceberg_tracking/output/'
+    # determine directory of current script (does not work in interactive mode)
+    # path_code = osp.dirname(osp.realpath(__file__))
+    path_code= Path('G:/Glacier/GD_ICEH_iceHabitat')
+
+    # source_path_head = '/hdd3/opensource/iceberg_tracking/output/'
+    source_path_head = Path('G:/Glacier/GD_ICEH_iceHabitat/output') 
     camnames = ['cam1','cam2','cam3','cam4'] 
     source_path_tail = 'utm'
-    source_path_photos = '/hdd3/opensource/iceberg_tracking/data/'
-    target_path = '/hdd3/opensource/iceberg_tracking/output/run1/' 
+    # source_path_photos = '/hdd3/opensource/iceberg_tracking/data/'
+    source_path_photos = Path('G:/Glacier/GD_ICEH_iceHabitat/data') #Path would take care of trailing slash
+    # target_path = '/hdd3/opensource/iceberg_tracking/output/run1/' 
+    target_path = Path('G:/Glacier/GD_ICEH_iceHabitat/output/run1')
     
-    paramfile = 'parameter_file_2019.xlsx'
+    paramfile_name = 'parameter_file_2019.xlsx'
     clockdriftfile = 'camera_time_drifts.xlsx' 
     fjord_outline = 'fjord_outline.npz'
+    # concatenate path to camera calibration file      
+    # paramfile_path = osp.join(file_path, paramfile_name) 
+    paramfile_path = Path(source_path_photos, paramfile_name)
+    clockdrift_path = Path(source_path_photos, clockdriftfile)
+    fjord_outline_path = Path(source_path_photos, fjord_outline)
     
     min_date = 20190724
     max_date = 20190726
@@ -162,7 +177,7 @@ def main():
         camnames = [camnames] 
     
     arguments = [(camnames, source_path_head, source_path_tail, target_path, 
-                  source_path_photos, paramfile, clockdriftfile, fjord_outline, day, 
+                  source_path_photos, paramfile_path, clockdrift_path, fjord_outline_path, day, 
                   time_window, grid_size, speedthreshold_cbar, observation_threshold, 
                   plot_switch) for day in dayrange]
     
@@ -179,18 +194,25 @@ def main():
     if plot_switch != 0 and movie_switch == 1:
         
         print('create movie...')
-        
-        # determine directory of current script (does not work in interactive mode)
-        file_path = osp.dirname(osp.realpath(__file__))
-        print(file_path)             
-        shell_script = osp.join(file_path, 'imports', 'timelapse.sh') 
-        dim1 = 2000
-        dim2 = -10
-        moviename = 'velocities_utm_{}min.avi'.format(int(time_window * 60.0))
-        searchpattern = '*.png'
-        
-        subprocess.call([shell_script, target_path + '/', str(int(dim1)), str(int(dim2)), 
-                         moviename, '8', searchpattern])  
+    
+        # determine whether Linux or Windows
+        if platform.system() == 'Windows':
+            #AKB added create_animation code to utilities.py
+            #this version may work on Linux too, only tested for Windows
+            util.create_animation(target_path, 'velocities_utm_{}min.avi'.format(int(time_window * 60.0)))
+            
+        else:
+            # determine directory of current script (does not work in interactive mode)
+            # file_path = osp.dirname(osp.realpath(__file__))
+            # print(file_path)             
+            shell_script = osp.join(path_code, 'imports', 'timelapse.sh') 
+            dim1 = 2000
+            dim2 = -10
+            moviename = 'velocities_utm_{}min.avi'.format(int(time_window * 60.0))
+            searchpattern = '*.png'
+            
+            subprocess.call([shell_script, target_path + '/', str(int(dim1)), str(int(dim2)), 
+                             moviename, '8', searchpattern])  
         
     sw.print_elapsed_time()
     sw.stop()
@@ -200,7 +222,7 @@ def main():
 def utm_to_gridded_utm(arguments):
     
     (camnames, source_path_head, source_path_tail, target_path, source_path_photos, 
-     paramfile_name, clockdriftfile_name, fjord_outline, day, time_window, grid_size, 
+     paramfile_path, clockdrift_path, fjord_outline_path, day, time_window, grid_size, 
      speedthreshold_cbar, observation_threshold, plot_switch) = arguments
          
     day_str = day.strftime('%Y%m%d')
@@ -208,10 +230,10 @@ def utm_to_gridded_utm(arguments):
     print('working on ' + day_str)
     
     # determine directory of current script (does not work in interactive mode)
-    file_path = osp.dirname(osp.realpath(__file__))
+    # file_path = osp.dirname(osp.realpath(__file__))
     
     # concatenate path to parameter file and read it     
-    paramfile_path = osp.join(file_path, paramfile_name)
+    # paramfile_path = osp.join(file_path, paramfile_name)
     paramfile = pd.read_excel(paramfile_path)
     
     startlist = []
@@ -243,7 +265,7 @@ def utm_to_gridded_utm(arguments):
     # continue only if at least one camera took photos                    
     if len(camnames_filtered) > 0:
         
-        # divide time period between start and stop time into subperiod of lenght time_window
+        # divide time period between start and stop time into subperiod of length time_window
         start_hours = list(np.arange(min(startlist), max(endlist) + 0.001, time_window))[0:-1]
         end_hours = list(np.arange(min(startlist), max(endlist) + 0.001, time_window))[1:]    
       
@@ -252,10 +274,12 @@ def utm_to_gridded_utm(arguments):
             end_hours = [max(endlist)]
         
         # read file containing time drifts
-        time_drift_file = pd.read_excel(osp.join(file_path, 'data', clockdriftfile_name))
+        # time_drift_file = pd.read_excel(osp.join(file_path, 'data', clockdriftfile_name))
+        time_drift_file = pd.read_excel(clockdrift_path)
         
         # load fjord coordinates
-        fjord = np.load(osp.join(file_path, 'data', fjord_outline))
+        # fjord = np.load(osp.join(file_path, 'data', fjord_outline))
+        fjord = np.load(fjord_outline_path)
         
         # loop over consecutive time periods, correct cameras for time drifts and 
         # extract velocities within time window for each camera    
@@ -402,12 +426,16 @@ def utm_to_gridded_utm(arguments):
             
             # save to .npz file        
             if time_window == 24.0:
-                npz_name = '{}/{}-{}_full_day_{}m.npz'.format(target_path, min_time.strftime('%Y%m%d_%H%M'), 
-                            max_time.strftime('%H%M'), grid_size)
+                # npz_name = '{}/{}-{}_full_day_{}m.npz'.format(target_path, min_time.strftime('%Y%m%d_%H%M'), 
+                #             max_time.strftime('%H%M'), grid_size)
+                npz_name = osp.join(target_path, '{}-{}_full_day_{}m.npz'.format(min_time.strftime('%Y%m%d_%H%M'), 
+                            max_time.strftime('%H%M'), grid_size))
                          
             else:
-                npz_name = '{}/{}-{}_{}min_{}m.npz'.format(target_path, start_datetime.strftime('%Y%m%d_%H%M'), 
-                             end_datetime.strftime('%H%M'), time_diff, grid_size) 
+                # npz_name = '{}/{}-{}_{}min_{}m.npz'.format(target_path, start_datetime.strftime('%Y%m%d_%H%M'), 
+                #              end_datetime.strftime('%H%M'), time_diff, grid_size) 
+                npz_name = osp.join(target_path, '{}-{}_{}min_{}m.npz'.format(start_datetime.strftime('%Y%m%d_%H%M'), 
+                             end_datetime.strftime('%H%M'), time_diff, grid_size))
             
             np.savez(npz_name, grid_size = grid_size, topleft = topleft, rows = rows, cols = cols,
                      grid_id = grid_id, i = coarsegrid_i, j = coarsegrid_j, 
