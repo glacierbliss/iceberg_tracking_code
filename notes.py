@@ -49,3 +49,16 @@ plt.show()
 np.unique(mask1)
 np.unique(mask)
 
+
+
+
+
+plot_ws='G:\\Glacier\\GD_ICEH_iceHabitat\\output\\cam4\\oblique\\20190724\\plots'
+plot_ws='G:\\Glacier\\GD_ICEH_iceHabitat\\output\\cam4\\oblique\\20190725\\plots'
+plot_ws='G:\\Glacier\\GD_ICEH_iceHabitat\\output\\cam4\\oblique\\20190726\\plots'
+track_len=2
+track_len_sec=60
+
+
+
+
