@@ -270,6 +270,7 @@ def lucaskanade_tracking(file_path, ws_source, ws_target, camname, track_len, tr
         # crop the photos with camera specific values (specified in the excel file) 
         # and save the cropped images in the target folder
         cam.crop_image_parallel(imagelist, ws_target, n_proc)    
+        #TODO/AKB NOTE: if crop values are all 0, don't run crop code or copy/paste all files
         
         #----------------------------------------------- 
                
