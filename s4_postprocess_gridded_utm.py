@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 import imports.utilities as util
 import imports.tracking_misc as trm
 
+from pathlib import Path
+
 try:
     warnings.filterwarnings('ignore')
     mpl.rc("font", **{"sans-serif": ["Arial"]})
@@ -31,11 +33,16 @@ functions to stack .npz files (many 1D files to one 3D file) and to tidy up fold
 
 def main():
     
-    # parameters and switches    
-    workspace = '/hdd3/opensource/iceberg_tracking2/output/run1/'#*
-    npz_combined_name = 'cam1_2_3_5_utm_200m_30min.npz'# *
+    # parameters and switches
+    # workspace = '/hdd3/opensource/iceberg_tracking2/output/run1/'#*
+    workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output/run1')
+    npz_combined_name = 'cam1_2_3_4_utm_200m_30min.npz'# *
 
-    cleanup =1 # delete original .npz files (1) or not (0)
+    cleanup = 0 # delete original .npz files (1) or not (0)
+    #TODO: FIX: if cleanup==1, can only run s4_postprocess_gridded_utm once or get an error
+    #actually, other aspects of this code are too fragile to run a second time too (after cleanup = 0)
+    #MEANWHILE: can just delete /run1/ and run s3_utm_to_gridded_utm again, then this again.
+    #CONCLUSION: just leave cleanup=0 and fix all issues later
     
     # create dedicated directories for individual products
     movie_workspace = osp.join(workspace, 'movie')
@@ -249,7 +256,7 @@ def spatial_mean(variable, coarseness = 2, nanmean = 1):
         
     return mean
   
-def average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_name, plot_num, viz):    
+def average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_path, plot_num, viz):    
     
     '''averages velocities temporally over user-defined time periods, 
     and spatially over user-defined window size'''
@@ -305,12 +312,8 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
         #--------------------------------------------------------------------------
         # plotting
             
-        # determine directory of current script (does not work in interactive mode)
-        file_path = osp.dirname(osp.realpath(__file__))
-        
         # load fjord outline               
-        fjord_outline = osp.join(file_path, 'data', fjord_outline_name)     
-        fjord = np.load(fjord_outline) 
+        fjord = np.load(fjord_outline_path) 
         
         # figsize, x and y extent
 
@@ -404,11 +407,15 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
                                     norm = mpl.colors.Normalize(0, 1.0), minlength = 0.1, arrowsize = 2.5)
                 plot_var = strm.lines
                              
-        # plot fjord lines 
-        for idnr in [0, 1, 2]:
-            ax.plot(fjord['x'][fjord['id'] ==  idnr], fjord['y'][fjord['id'] == idnr], 
-                    '-', lw = 0.6, color = 'k')
-        
+        # plot fjord lines
+        if 'id' in fjord:
+            #AKB version of fjord had no 'id' field, so this threw an error.
+            for idnr in [0, 1, 2]:
+                ax.plot(fjord['x'][fjord['id'] ==  idnr], fjord['y'][fjord['id'] == idnr], 
+                        '-', lw = 0.6, color = 'k')
+        else:
+            ax.plot(fjord['x'], fjord['y'],'-', lw = 0.6, color = 'k')
+
         # create axes for colorbar            
         cax = fig.add_axes([(x_space_left + x_extent_ax + x_space_between) / x_extent_total, y_space_bottom/y_extent_total, 
                             x_extent_ax_cb/x_extent_total, y_extent_ax/y_extent_total], anchor = 'SW', zorder = 10) 
@@ -439,18 +446,29 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
             return [xx_coarse, yy_coarse, u_coarse, v_coarse]       
     
 if __name__ == '__main__':
-    # main()
+    main()
+    
+    #AKB NOTE: can I move all this up into main and streamline filenames?
+    
+    
     #time range for spatial averaging 
-    days = pd.date_range('2019-07-24', '2019-07-26', freq = 'd') # create daily averages for the 2018 campaign
+    days = pd.date_range('2019-07-24', '2019-07-26', freq = 'd') # create daily averages
     
     # path to .npz file
-    npz = np.load('/hdd3/opensource/iceberg_tracking/output/run1/npz/cam1_2_3_5_utm_200m_30min.npz')
+    # npz = np.load('/hdd3/opensource/iceberg_tracking/output/run1/npz/cam1_2_3_4_utm_200m_30min.npz')
+    npz = np.load(Path('G:/Glacier/GD_ICEH_iceHabitat/output/run1/npz/cam1_2_3_4_utm_200m_30min.npz'))
 
     # fjord outline
     fjord_outline_name = 'fjord_outline.npz'
+    # determine directory of current script (does not work in interactive mode)
+    # file_path = osp.dirname(osp.realpath(__file__))
+    file_path=Path('G:/Glacier/GD_ICEH_iceHabitat/data')
+    fjord_outline_path = osp.join(file_path, fjord_outline_name)     
 
     # output folder
-    figure_workspace = '/hdd3/opensource/iceberg_tracking/output/post_process'
+    # figure_workspace = '/hdd3/opensource/iceberg_tracking/output/post_process'
+    figure_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output/post_process')
+    create_directory(figure_workspace)
 
     coarseness = 1
     plot_num = 1 # 1 for quiver plot, 2 for streamplot
@@ -468,4 +486,4 @@ if __name__ == '__main__':
         
          title = 'Daily average {}'.format(start_time.strftime('%Y-%m-%d'))
     
-         [x, y, u, v] = average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_name, plot_num, viz)
+         [x, y, u, v] = average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_path, plot_num, viz)
