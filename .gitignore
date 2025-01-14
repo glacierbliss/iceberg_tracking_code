@@ -3,4 +3,5 @@
 .RData
 .Ruserdata
 imports/__pycache__/
+__pycache__
 ~$S_code_draft.doc
