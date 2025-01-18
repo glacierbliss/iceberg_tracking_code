@@ -49,12 +49,14 @@ def main():
     figure_workspace = osp.join(workspace, 'figures')
     npz_workspace = osp.join(workspace, 'npz')
     mat_workspace = osp.join(workspace, 'mat') 
+    csv_workspace = osp.join(workspace, 'csv') 
     
     # Create directories
     create_directory(movie_workspace)
     create_directory(figure_workspace)
     create_directory(npz_workspace)
     create_directory(mat_workspace)
+    create_directory(csv_workspace)
 
     
     # move figures into new folder
@@ -225,11 +227,37 @@ def npz_to_mat(np_file, targetfolder):
     
     scipy.io.savemat(osp.join(targetfolder, osp.basename(np_file).replace('.npz', '.mat')), param_dict)
     
+def npz_to_csv(np_file, targetfolder):
+    
+    '''converts .npz files to .csv files for archiving'''
+    #should we do this here, or save from average_spatially_temporally?
+    
+    file_loaded = np.load(np_file)
+        
+    param_dict = {}
+        
+    param_dict['u'] = file_loaded['u']
+    param_dict['v'] = file_loaded['v']
+    param_dict['speed'] = file_loaded['speed']
+    param_dict['count'] = file_loaded['count']
+    param_dict['time'] = file_loaded['time']
+
+    asdf = file_loaded['u']
+    
+    name_fjord='JohnsHopkins' #TODO: move this somewhere else!!
+    np.savetxt(osp.join(targetfolder,name_fjord+'_easting.csv'),file_loaded['x'], fmt='%.2f', delimiter=',')
+    np.savetxt(osp.join(targetfolder,name_fjord+'_northing.csv'),file_loaded['y'], fmt='%.2f', delimiter=',')
+    
+    for i in range(file_loaded['u'].shape[2]):
+        timestr=trm.epoch_to_datetime(file_loaded['time'][i]).strftime("%Y%m%d%H%M%S")
+        np.savetxt(osp.join(targetfolder,name_fjord+'_u_'+timestr+'.csv'),file_loaded['u'][:,:,i],fmt='%.4f', delimiter=',')
+        np.savetxt(osp.join(targetfolder,name_fjord+'_v_'+timestr+'.csv'),file_loaded['v'][:,:,i],fmt='%.4f', delimiter=',')
+        np.savetxt(osp.join(targetfolder,name_fjord+'_count_'+timestr+'.csv'),file_loaded['count'][:,:,i],fmt='%.0f', delimiter=',')
+
+
 #%% functions to derive spatially and temporally averaged velocities from the 3D .npz file
     
-'''
-functions to derive spatially and temporally averaged velocities from the 3D .npz file 
-'''
+'''functions to derive spatially and temporally averaged velocities from the 3D .npz file '''
     
 def spatial_mean(variable, coarseness = 2, nanmean = 1):
     
@@ -435,7 +463,6 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
             if plot_num == 1:
                 plt.savefig(osp.join(figure_workspace, title + '_quiver.png'), dpi = 300)
             if plot_num == 2:
-
                 plt.savefig(osp.join(figure_workspace, title + '_streamline.png'), dpi = 300)
             plt.close()
         
@@ -467,7 +494,7 @@ if __name__ == '__main__':
 
     # output folder
     # figure_workspace = '/hdd3/opensource/iceberg_tracking/output/post_process'
-    figure_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output/post_process')
+    figure_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output/run1/post_process') #seems like this ought to be inside /run1/
     create_directory(figure_workspace)
 
     coarseness = 1
