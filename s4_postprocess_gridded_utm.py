@@ -242,8 +242,6 @@ def npz_to_csv(np_file, targetfolder):
     param_dict['count'] = file_loaded['count']
     param_dict['time'] = file_loaded['time']
 
-    asdf = file_loaded['u']
-    
     name_fjord='JohnsHopkins' #TODO: move this somewhere else!!
     np.savetxt(osp.join(targetfolder,name_fjord+'_easting.csv'),file_loaded['x'], fmt='%.2f', delimiter=',')
     np.savetxt(osp.join(targetfolder,name_fjord+'_northing.csv'),file_loaded['y'], fmt='%.2f', delimiter=',')
@@ -253,7 +251,7 @@ def npz_to_csv(np_file, targetfolder):
         np.savetxt(osp.join(targetfolder,name_fjord+'_u_'+timestr+'.csv'),file_loaded['u'][:,:,i],fmt='%.4f', delimiter=',')
         np.savetxt(osp.join(targetfolder,name_fjord+'_v_'+timestr+'.csv'),file_loaded['v'][:,:,i],fmt='%.4f', delimiter=',')
         np.savetxt(osp.join(targetfolder,name_fjord+'_count_'+timestr+'.csv'),file_loaded['count'][:,:,i],fmt='%.0f', delimiter=',')
-
+#TODO: consider how to denote hours of data (so as not to give the impression it is an average over 24 hrs.)
 
 #%% functions to derive spatially and temporally averaged velocities from the 3D .npz file
     
