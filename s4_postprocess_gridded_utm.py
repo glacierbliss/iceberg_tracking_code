@@ -227,22 +227,10 @@ def npz_to_mat(np_file, targetfolder):
     
     scipy.io.savemat(osp.join(targetfolder, osp.basename(np_file).replace('.npz', '.mat')), param_dict)
     
-def npz_to_csv(np_file, targetfolder):
+def npz_to_csv(file_loaded, targetfolder, name_fjord):
     
-    '''converts .npz files to .csv files for archiving'''
-    #should we do this here, or save from average_spatially_temporally?
-    
-    file_loaded = np.load(np_file)
-        
-    param_dict = {}
-        
-    param_dict['u'] = file_loaded['u']
-    param_dict['v'] = file_loaded['v']
-    param_dict['speed'] = file_loaded['speed']
-    param_dict['count'] = file_loaded['count']
-    param_dict['time'] = file_loaded['time']
+    '''converts .npz files to .csv files for archiving (e.g. 30 min intervals)'''
 
-    name_fjord='JohnsHopkins' #TODO: move this somewhere else!!
     np.savetxt(osp.join(targetfolder,name_fjord+'_easting.csv'),file_loaded['x'], fmt='%.2f', delimiter=',')
     np.savetxt(osp.join(targetfolder,name_fjord+'_northing.csv'),file_loaded['y'], fmt='%.2f', delimiter=',')
     
@@ -251,7 +239,23 @@ def npz_to_csv(np_file, targetfolder):
         np.savetxt(osp.join(targetfolder,name_fjord+'_u_'+timestr+'.csv'),file_loaded['u'][:,:,i],fmt='%.4f', delimiter=',')
         np.savetxt(osp.join(targetfolder,name_fjord+'_v_'+timestr+'.csv'),file_loaded['v'][:,:,i],fmt='%.4f', delimiter=',')
         np.savetxt(osp.join(targetfolder,name_fjord+'_count_'+timestr+'.csv'),file_loaded['count'][:,:,i],fmt='%.0f', delimiter=',')
-#TODO: consider how to denote hours of data (so as not to give the impression it is an average over 24 hrs.)
+
+
+def save_csv(x,y,u,v,count,time_str, targetfolder, name_fjord):
+    
+    '''saves .csv files for archiving'''
+    #should we do this here, or save from average_spatially_temporally?
+    
+    # file_loaded = np.load(np_file)
+        
+    np.savetxt(osp.join(targetfolder,name_fjord+'_easting.csv'),x, fmt='%.2f', delimiter=',')
+    np.savetxt(osp.join(targetfolder,name_fjord+'_northing.csv'),y, fmt='%.2f', delimiter=',')
+    
+    np.savetxt(osp.join(targetfolder,name_fjord+'_u_'+time_str+'.csv'),u,fmt='%.4f', delimiter=',')
+    np.savetxt(osp.join(targetfolder,name_fjord+'_v_'+time_str+'.csv'),v,fmt='%.4f', delimiter=',')
+    np.savetxt(osp.join(targetfolder,name_fjord+'_count_'+time_str+'.csv'),count,fmt='%.0f', delimiter=',')
+
+
 
 #%% functions to derive spatially and temporally averaged velocities from the 3D .npz file
     
@@ -282,7 +286,7 @@ def spatial_mean(variable, coarseness = 2, nanmean = 1):
         
     return mean
   
-def average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_path, plot_num, viz):    
+def average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_path, plot_num, viz,flag_save_csv = 0):    
     
     '''averages velocities temporally over user-defined time periods, 
     and spatially over user-defined window size'''
@@ -301,6 +305,9 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
     
     # create time mask and select data within mask
     time_mask = (time >= start_time_epoch) & (time < end_time_epoch)
+    time_first=trm.epoch_to_datetime(time[time_mask].min()).strftime('%Y%m%d_%H%M')
+    time_last=trm.epoch_to_datetime(time[time_mask].max()).strftime('-%H%M')
+    time_str=time_first+time_last
     
     u_sel = u[:, :, time_mask]
     v_sel = v[:, :, time_mask]
@@ -321,7 +328,7 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
 
         print('{} - {}: no data available...'.format(start_time, end_time))      
         
-        return [np.nan, np.nan, np.nan, np.nan]
+        return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
         
     else:
         
@@ -333,6 +340,7 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
             xx_coarse = spatial_mean(xx, coarseness = coarseness, nanmean = 0)
             yy_coarse = spatial_mean(yy, coarseness = coarseness, nanmean = 0) 
             speed_mean_coarse = np.hypot(u_coarse, v_coarse)
+            count_coarse = spatial_mean(count_sum, coarseness = coarseness, nanmean = 0) #NOTE: this is coarseness mean of count_sum
             
             
         #--------------------------------------------------------------------------
@@ -465,10 +473,10 @@ def average_spatially_temporally(start_time, end_time, coarseness, npz, title, f
             plt.close()
         
         if coarseness == 1:    
-            return [xx, yy, u_mean, v_mean]
+            return [xx, yy, u_mean, v_mean, count_sum, time_str]
             
         else:
-            return [xx_coarse, yy_coarse, u_coarse, v_coarse]       
+            return [xx_coarse, yy_coarse, u_coarse, v_coarse, count_coarse, time_str]       
     
 if __name__ == '__main__':
     main()
@@ -494,21 +502,40 @@ if __name__ == '__main__':
     # figure_workspace = '/hdd3/opensource/iceberg_tracking/output/post_process'
     figure_workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/output/run1/post_process') #seems like this ought to be inside /run1/
     create_directory(figure_workspace)
+    
+    #prefix for output filename
+    name_fjord='JohnsHopkins' #TODO: move this somewhere else? e.g. config file.
 
-    coarseness = 1
+    #Resave data as csv
+    npz_to_csv(npz, csv_workspace, name_fjord)
+
+    #Average spatially-temporally
+    coarseness = 1 #even coarser averaging (number of cells to aggregate in x and y directions)
     plot_num = 1 # 1 for quiver plot, 2 for streamplot
     viz = 1 # 0 for visualization, 1 for save to file
-    
+    flag_save_csv = 1 #0 to skip saving, 1 to save
 
     # 20190724_1300-1330_30min_200m.npz
     for day in days: 
         
          start_time = day + dt.timedelta(hours = 12) # measurements never start before noon UTC
          end_time = start_time + dt.timedelta(hours = 22) # measurements always last less than 24 hours      
+         #TODO: relax these constraints for 24-hr camera or other time zones
         
          start_time_str = start_time.strftime('%Y-%m-%d %H:%M')
          end_time_str = end_time.strftime('%Y-%m-%d %H:%M')
         
          title = 'Daily average {}'.format(start_time.strftime('%Y-%m-%d'))
     
-         [x, y, u, v] = average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_path, plot_num, viz)
+         [x, y, u, v, count, time_str] = average_spatially_temporally(start_time, end_time, coarseness, npz, title, fjord_outline_path, plot_num, viz,flag_save_csv)
+
+         if flag_save_csv==1:
+            #flip these back (see above, x doesn't matter, count didn't get flipped)
+            y = np.flipud(y)
+            u = np.flipud(u)
+            v = np.flipud(v)
+            save_csv(x,y,u,v,count,time_str, csv_workspace, name_fjord)
+            #AKB NOTE: I don't like this method (that I created). Resaves x,y
+            #every time. Clunky. What would be better? Save inside average_s_t function?
+
+
