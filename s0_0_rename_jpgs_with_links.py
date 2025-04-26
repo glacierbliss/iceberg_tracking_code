@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 ##############
 #TODO: rework this to generate hard links instead of renaming.
+#TODO: understand how hard links work - creating, deleting link without deleting source, etc.
 ##############
 import os
 import os.path as osp
