@@ -24,7 +24,7 @@ def rename_jpgs():
      
     # workspace = '/hdd3/johns_hopkins/mcbride/DCIM_rename/100CANON' # workspace containing the original photos
     # workspace = Path(r'K:\SEAN_Data\Work_Zone\GD\GD_TLPH_timeLapsePhotosTESTING\2023\20230823_McBride_2_Fjord_UASoutheast')
-    workspace = Path(r'C:\Users\abliss\Documents\GD_TLPH_timeLapsePhotosTESTING\2023\20230823_McBride_2_Fjord_UASoutheast')
+    workspace = Path(r'D:\OneDrive - DOI\Glacier\GD_TLPH_timeLapsePhotosTESTING\2023\20230823_McBride_2_Fjord_UASoutheast')
     #AKB NOTE: subfolder \107CANON\
     time_difference = -9 # time difference to get from UTC (image timing) to local time
     file_extension = '.JPG' # file extension used to collect photos. case sensitive on linux   
