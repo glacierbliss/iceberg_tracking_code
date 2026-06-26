@@ -23,10 +23,11 @@ def rename_jpgs():
     # workspace = Path(r'K:\SEAN_Data\Work_Zone\GD\GD_TLPH_timeLapsePhotosTESTING\2023\20230823_McBride_2_Fjord_UASoutheast')
     # workspace = Path(r'D:\OneDrive - DOI\Glacier\GD_TLPH_timeLapsePhotosTESTING\2023\20230823_McBride_2_Fjord_UASoutheast')
     # #AKB NOTE: subfolder \107CANON\
-    # time_difference = -9 # time difference to get from UTC (image timing) to local time
-    workspace = Path(r'D:\OneDrive - DOI\Glacier\GD_TLPH_timeLapsePhotosTESTING\2025\20250818_McBride_1_Terminus_Cyclapse')
+    time_difference = -9 # time difference to get from UTC (image timing) to local time
+    # workspace = Path(r'D:\OneDrive - DOI\Glacier\GD_TLPH_timeLapsePhotosTESTING\2025\20250818_McBride_1_Terminus_Cyclapse')
+    workspace=Path(r'D:\OneDrive - DOI\Glacier\GD_ICEH_iceHabitat\dataMcBride2025\cam2')
     #AKB NOTE: subfolder \100CANON\
-    time_difference = -1 # McBride Cyclapse records in AKDT time, -1 converts to AKST. time difference to get from UTC (image timing) to local time
+    # time_difference = -1 # McBride Cyclapse records in AKDT time, -1 converts to AKST. time difference to get from UTC (image timing) to local time
     # 9:00 AM UTC is 12:00 AM (midnight) AKST is 1:00 AM AKDT. UTC-9=AKST, UTC-8=AKDT, AKDT-1=AKST.
     file_extension = '.JPG' # file extension used to collect photos. case sensitive on linux   
     
