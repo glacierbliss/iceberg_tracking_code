@@ -168,7 +168,7 @@ class LucasKanade:
                 
                 # add the features to the tracks already available (tracks is a list of lists,
                 # with each sublist containing the x and y coordinates of the vertices)
-                
+                 
                 # reset tracks
                 self.tracks = []
                 
@@ -183,7 +183,8 @@ class LucasKanade:
        
 if __name__ == '__main__':
     # workspace = Path('/hdd3/opensource/iceberg_tracking/data/test/')
-    workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data/test') #Path would take care of trailing slash
+    # workspace = Path('G:/Glacier/GD_ICEH_iceHabitat/data/test') #Path would take care of trailing slash
+    workspace = Path('C:/U/Glacier/GD_ICEH_iceHabitat/data/test')
     detect_interval = 3 #set between 2 and 4
     time_spacing = 120 #set between 60 and 240
     plt.ioff()
